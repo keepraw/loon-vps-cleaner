@@ -255,8 +255,9 @@ PROXY_DOCKER_NETWORK=$proxy_network
 REGISTRY_HOST_PORT=$registry_port
 ENV
 chmod 600 "$ENV_FILE"
-mkdir -p data/registry data/sub-store backups proxy-snippets
+mkdir -p data/registry data/sub-store backups proxy-snippets caddy-sites
 chmod 700 data/registry data/sub-store backups
+chmod 755 caddy-sites
 chown 10001:10001 data/registry
 
 case "$mode" in

@@ -80,3 +80,17 @@ def test_update_only_pulls_caddy_when_current_project_has_it():
     update = (ROOT / "update.sh").read_text(encoding="utf-8")
     assert "docker compose config --services" in update
     assert "grep -qx caddy" in update
+
+
+def test_standalone_caddy_is_a_shared_multi_site_ingress():
+    config = read_yaml("deploy/compose.standalone.yaml")
+    caddy = config["services"]["caddy"]
+    assert "host.docker.internal:host-gateway" in caddy["extra_hosts"]
+    assert "./caddy-sites:/etc/caddy/sites:ro" in caddy["volumes"]
+    caddyfile = (ROOT / "Caddyfile").read_text(encoding="utf-8")
+    assert "import /etc/caddy/sites/*.caddy" in caddyfile
+    setup = (ROOT / "setup.sh").read_text(encoding="utf-8")
+    assert "caddy-sites" in setup
+    backup = (ROOT / "backup.sh").read_text(encoding="utf-8")
+    assert "caddy-sites" in backup
+    assert "caddy-sites/*.caddy" in (ROOT / ".gitignore").read_text(encoding="utf-8")

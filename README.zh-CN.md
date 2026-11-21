@@ -34,6 +34,31 @@
 - Sub-Store 的 3000 端口只在 Docker 内部可见。
 - Registry 的 8000 端口只在 Docker 内部可见。
 
+**Standalone 的 Caddy 同时可以作为这台 VPS 的共享网站入口**，不只服务 Loon Cleaner：
+
+- 安装器创建本地目录 `caddy-sites/`，并将其只读挂载给 Caddy。
+- 主 Caddyfile 自动导入 `caddy-sites/*.caddy`。每个网站一个独立文件，新增网站不需要修改项目主配置。
+- Caddy 容器提供 `host.docker.internal` 到宿主机的网关映射，可以反代到现有服务已发布的宿主机端口。
+- `caddy-sites/*.caddy` 不会提交到 GitHub，但会进入本地备份。
+
+例如当前 BiliTool 已发布宿主机 3000 端口。以后要让它通过独立域名访问：
+
+```bash
+cp caddy-sites/bilitool.example.caddy.example caddy-sites/bilitool.example.caddy
+nano caddy-sites/bilitool.example.caddy
+```
+
+把示例域名改成你自己的域名，并确认 DNS 指向这台 VPS。示例文件会把请求转发到 `host.docker.internal:3000`。然后验证并热加载：
+
+```bash
+docker compose exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+```
+
+Caddy 会按 Host 域名分发网站，并为新域名自动申请 HTTPS。现有 BiliTool 容器、Compose 项目和 3000 端口映射都不需要改动。
+
+如果未来某个 Docker 应用没有发布宿主机端口，可让 Caddy 和该应用加入同一个外部 Docker network，再用容器服务名反代；不必为了所有网站都开放宿主机端口。
+
 ### 2. Host Proxy
 
 适合现有 Nginx 或 Caddy 运行在宿主机上的情况。项目不启动第二个反向代理，只将 Registry 绑定到 `127.0.0.1` 的一个空闲高位端口（默认从 18765 开始选择）。安装器生成反向代理配置片段，交由你检查并手动加入现有代理配置。
@@ -149,7 +174,7 @@ sudo bash backup.sh
 sudo bash update.sh
 ```
 
-`backup.sh` 同时保存 `.env`、本地 Compose override、生成的反向代理片段和数据目录。`update.sh` 只更新当前安装目录中的代码和镜像，不会自动下载 GitHub 新代码，也不会改写 `.env`。更新 Registry 源码前先审查 GitHub 变更、备份数据，再按发布说明更新本地代码。
+`backup.sh` 同时保存 `.env`、本地 Compose override、生成的反向代理片段、`caddy-sites/` 自定义网站配置和数据目录。`update.sh` 只更新当前安装目录中的代码和镜像，不会自动下载 GitHub 新代码，也不会改写 `.env`。更新 Registry 源码前先审查 GitHub 变更、备份数据，再按发布说明更新本地代码。
 
 ## 端口与网络说明
 
@@ -163,7 +188,7 @@ BiliTool 等其他服务即使使用宿主机 3000，也不会与 Sub-Store 冲�
 
 ## 备份与安全
 
-- 不要把真实机场订阅、`.env`、`data/`、`backups/`、生成的 `compose.override.yaml` 或 `proxy-snippets/loon-cleaner.*` 提交到 GitHub。
+- 不要把真实机场订阅、`.env`、`data/`、`backups/`、生成的 `compose.override.yaml`、`proxy-snippets/loon-cleaner.*` 或本地 `caddy-sites/*.caddy` 提交到 GitHub。
 - `.env` 和数据库包含令牌、加密密钥及代理凭据，备份文件也必须保密。
 - Loon 订阅 URL 是 bearer token；泄露后别人可能读取你的节点配置。需要时重新生成令牌。
 - Sub-Store 管理后台只在 Docker 内部使用，不直接发布到公网。

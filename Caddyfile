@@ -22,3 +22,6 @@
     respond "Not found" 404
   }
 }
+
+# Extra virtual hosts for this VPS. Keep local files in ./caddy-sites/*.caddy.
+import /etc/caddy/sites/*.caddy

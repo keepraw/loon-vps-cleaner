@@ -28,6 +28,19 @@ Overseas is an aggregate, not a mutually exclusive fourth region. A node appeari
 At setup choose one mode:
 
 1. **Standalone** — project-owned Caddy binds public TCP 80/443. Use only when those ports are free.
+
+In Standalone mode, this Caddy can also become the VPS's **shared multi-site ingress**. The installer creates a local `caddy-sites/` directory, mounts it read-only at `/etc/caddy/sites`, and the main Caddyfile imports every `*.caddy` file there. Each website gets its own file; you do not need to edit the project's main Caddyfile.
+
+The Caddy container maps `host.docker.internal` to the Docker host gateway. This allows a site file to reverse-proxy to an existing host-published port without changing that application's Compose project. For example, to route an existing BiliTool published on host port 3000:
+
+```bash
+cp caddy-sites/bilitool.example.caddy.example caddy-sites/bilitool.example.caddy
+# Edit the domain in the new file and point its DNS to this VPS.
+docker compose exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+```
+
+Local `caddy-sites/*.caddy` files are git-ignored and included in backups. For an app without a host-published port, attach Caddy and that app to the same external Docker network and proxy to its service name instead.
 2. **Host Proxy** — existing host Nginx/Caddy proxies to a localhost-only Registry port. No second proxy is started and no existing config is edited.
 3. **Docker Proxy** — Registry joins an existing external Docker network with alias `loon-vps-cleaner-registry`; the existing proxy container must join that network too. No host port is published.
 
@@ -75,6 +88,6 @@ sudo bash update.sh
 
 ## Security and limitations
 
-Never commit `.env`, `data/`, `backups/`, generated `compose.override.yaml`, or generated `proxy-snippets/loon-cleaner.*`. They contain tokens, credentials or deployment details. Feed URLs are bearer tokens. Reverse-proxy snippets are generated for review and must be manually integrated/reloaded. Host Proxy Caddy snippets can be imported at the top level of the existing Caddyfile; Nginx snippets belong inside the dedicated TLS server block. Docker Proxy requires the existing proxy container to join the selected external network; Docker Nginx also needs the generated htpasswd file mounted read-only. Automated tests use a mocked Sub-Store API; verify your live provider protocols and iOS Loon import before replacing an existing Loon profile.
+Never commit `.env`, `data/`, `backups/`, generated `compose.override.yaml`, generated `proxy-snippets/loon-cleaner.*`, or local `caddy-sites/*.caddy` files. They contain tokens, credentials or deployment details. Feed URLs are bearer tokens. Reverse-proxy snippets are generated for review and must be manually integrated/reloaded. Host Proxy Caddy snippets can be imported at the top level of the existing Caddyfile; Nginx snippets belong inside the dedicated TLS server block. Docker Proxy requires the existing proxy container to join the selected external network; Docker Nginx also needs the generated htpasswd file mounted read-only. Automated tests use a mocked Sub-Store API; verify your live provider protocols and iOS Loon import before replacing an existing Loon profile.
 
 See [README.zh-CN.md](README.zh-CN.md) for detailed setup modes, reverse-proxy integration, maintenance and troubleshooting.

@@ -16,3 +16,6 @@ __pycache__/
 compose.override.yaml
 proxy-snippets/loon-cleaner.*
 proxy-snippets/nginx.htpasswd
+
+# Local virtual-host definitions for the standalone shared Caddy ingress
+caddy-sites/*.caddy

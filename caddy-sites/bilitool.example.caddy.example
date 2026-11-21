@@ -1,0 +1,6 @@
+# Copy this file to caddy-sites/bilitool.example.caddy and replace the domain.
+# The existing BiliTool container already publishes host port 3000.
+bilitool.example.com {
+  encode zstd gzip
+  reverse_proxy host.docker.internal:3000
+}
