@@ -68,11 +68,80 @@ The bootstrap downloads source into `/opt/loon-vps-cleaner` and runs interactive
 
 Setup detects the OS, Docker CLI, Compose V2 and daemon. It reuses an existing Docker Engine. If Docker is missing, it offers official Docker APT installation on Debian/Ubuntu only. It checks ingress ports before generating secrets; Standalone is blocked when 80/443 are occupied. It then writes a local `compose.override.yaml`, `.env` (mode 600), data directories and reverse-proxy snippets before starting only this Compose project.
 
-## Use
+## Usage tutorial
 
-Open `https://YOUR_DOMAIN/manager/`, add one or more HTTPS provider subscription URLs, refresh, and use the Nodes page to exclude unwanted nodes, add regex filters, restore nodes, rename them or override regions. The service refreshes providers daily at 05:00 Asia/Shanghai. A failed provider refresh keeps its last successful snapshot.
+### 1. Sign in
 
-Copy the single private feed URL from the manager into Loon once. The admin UI uses HTTP Basic Auth with a 10-character minimum and no mandatory character classes; use a memorable but hard-to-guess passphrase. The unified feed uses a long random token. Sub-Store's API is private to the Docker network.
+Open https://YOUR_DOMAIN/manager/ and sign in with the admin username and password created during setup. The browser uses HTTP Basic Auth. Treat provider URLs and the generated Loon feed URL as secrets.
+
+### 2. Add multiple providers
+
+In **Airports**, add each provider separately:
+
+1. Enter a recognizable name, e.g. Airport A.
+2. Paste its public HTTPS subscription URL.
+3. Optionally set a User-Agent if the provider requires one. Leave it blank to use clash.meta/v1.19.23.
+4. Click **Add & refresh**.
+
+Repeat for as many providers as needed. Edit a provider entry to change its name or URL. Only public HTTPS URLs are accepted.
+
+### 3. Refresh providers
+
+A newly added provider is refreshed immediately. Use **Refresh all airports** for all providers or **Refresh one** for a single provider. Scheduled refresh runs daily at 05:00 Asia/Shanghai. If a provider fetch fails, its last successful snapshot is retained.
+
+### 4. Clean nodes
+
+The Nodes section shows 40 entries per page. Use search, provider and decision filters.
+
+- **Exclude**: excludes this node record for this provider.
+- **Keep**: manually keeps the node and overrides regex rules.
+- **Edit display name**: changes its published label, not its connection settings.
+- **Region selector**: override automatic classification as HK, US, JP or Overseas.
+- **Global Exclude**: excludes the same fingerprint across providers.
+- **Global Restore**: removes that global exclusion.
+
+Use **Restore Auto** to clear a manual decision. Select checkboxes and use the batch actions for multiple nodes.
+
+### 5. Add persistent regex rules
+
+Add a case-insensitive regular expression against upstream node names. Scope it to one provider or all providers. Example: (?i)(expire|traffic|0[.]1x). Manual Keep overrides regex rules; global exclusion, manual exclusion and review status still prevent publication.
+
+Start with narrow patterns and inspect the result before broadening them.
+
+### 6. Add one subscription to Loon
+
+The manager exposes one **Unified subscription (all nodes)** URL. Click **Copy subscription** once.
+
+Merge the following entries into the corresponding sections of your existing Loon profile; do not duplicate section headers if they already exist.
+
+~~~ini
+[Remote Proxy]
+VPS = https://YOUR_DOMAIN/loon/all/YOUR_TOKEN,enabled=true,parser-enabled=false
+
+[Remote Filter]
+VPS-HK = NameRegex,VPS,FilterKey = "^HK - "
+VPS-US = NameRegex,VPS,FilterKey = "^US - "
+VPS-JP = NameRegex,VPS,FilterKey = "^JP - "
+
+[Proxy Group]
+Hong Kong = select,VPS-HK
+United States = select,VPS-US
+Japan = select,VPS-JP
+Overseas = select,VPS
+~~~
+
+Replace the URL with the exact URL copied from the manager. Save the profile and update the VPS subscription in Loon.
+
+The VPS prefixes node names with HK - , US - , JP - or OTHER - . The three Remote Filters split the single subscription into regional groups. Overseas intentionally contains every accepted node, including HK/US/JP. These are manual select groups; there is no latency test or automatic switching.
+
+See loon-four-groups.example.conf for the Chinese group-name version.
+
+### 7. Troubleshooting
+
+- A node is missing from a regional group: correct its region in the manager, publish, then refresh the Loon subscription.
+- A node appears in Overseas as well: this is intentional; Overseas is the aggregate group.
+- A node is marked for review: its endpoint/credentials may have changed and need manual confirmation.
+- The manager still shows four separate feed URLs: the server is running an older Registry version. Upgrade it using the instructions below, then hard-refresh the browser.
 
 ## Upgrade an existing deployment
 
