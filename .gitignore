@@ -1,0 +1,13 @@
+.env
+data/
+backups/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# OS/editor/package output
+.DS_Store
+.idea/
+.vscode/
+*.zip
+*.tar.gz

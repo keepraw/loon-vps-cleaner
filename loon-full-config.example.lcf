@@ -1,0 +1,84 @@
+# Loon minimal configuration draft
+# Replace the four example HTTPS URLs with values copied from the VPS Manager.
+# Overseas deliberately contains ALL accepted nodes (including HK/US/JP).
+# This is an example based on the earlier minimal draft; test before replacing your live profile.
+
+[Remote Proxy]
+VPS-HK = https://example.com/loon/hk/HK_TOKEN,enabled=true,parser-enabled=false
+VPS-US = https://example.com/loon/us/US_TOKEN,enabled=true,parser-enabled=false
+VPS-JP = https://example.com/loon/jp/JP_TOKEN,enabled=true,parser-enabled=false
+VPS-OVERSEAS = https://example.com/loon/overseas/OVERSEAS_TOKEN,enabled=true,parser-enabled=false
+
+[Rule]
+DOMAIN,www.topcashback.com,海外服务
+DOMAIN,grok.com,海外服务
+DOMAIN,www.uscardforum.com,海外服务
+DOMAIN,raise.com,美国服务
+DOMAIN,straighttalk.com,美国服务
+DOMAIN-KEYWORD,mediafire,海外服务
+DOMAIN,download2279.mediafire.com,海外服务
+
+# WeChat domain rules merged into domestic DIRECT rules
+DOMAIN,apd-pcdnwxlogin.teg.tencent-cloud.net,DIRECT
+DOMAIN,btrace.qq.com,DIRECT
+DOMAIN,dldir1.qq.com,DIRECT
+DOMAIN,slife.xy-asia.com,DIRECT
+DOMAIN,soup.v.qq.com,DIRECT
+DOMAIN,vweixinf.tc.qq.com,DIRECT
+DOMAIN,weixin110.qq.com,DIRECT
+DOMAIN,wup.imtt.qq.com,DIRECT
+DOMAIN-SUFFIX,iot-tencent.com,DIRECT
+DOMAIN-SUFFIX,lbs.gtimg.com,DIRECT
+DOMAIN-SUFFIX,map.qq.com,DIRECT
+DOMAIN-SUFFIX,qlogo.cn,DIRECT
+DOMAIN-SUFFIX,qpic.cn,DIRECT
+DOMAIN-SUFFIX,servicewechat.com,DIRECT
+DOMAIN-SUFFIX,tenpay.com,DIRECT
+DOMAIN-SUFFIX,up-hl.3g.qq.com,DIRECT
+DOMAIN-SUFFIX,vweixinthumb.tc.qq.com,DIRECT
+DOMAIN-SUFFIX,wechat.com,DIRECT
+DOMAIN-SUFFIX,wechatlegal.net,DIRECT
+DOMAIN-SUFFIX,wechatos.net,DIRECT
+DOMAIN-SUFFIX,wechatpay.com,DIRECT
+DOMAIN-SUFFIX,weixin.com,DIRECT
+DOMAIN-SUFFIX,weixin.qq.com,DIRECT
+DOMAIN-SUFFIX,weixinbridge.com,DIRECT
+DOMAIN-SUFFIX,weixinsxy.com,DIRECT
+DOMAIN-SUFFIX,wx.gtimg.com,DIRECT
+DOMAIN-SUFFIX,wx.qq.com,DIRECT
+DOMAIN-SUFFIX,wxapp.tc.qq.com,DIRECT
+DOMAIN-SUFFIX,wxs.qq.com,DIRECT
+DOMAIN-SUFFIX,yun-hl.3g.qq.com,DIRECT
+
+GEOIP,CN,DIRECT
+FINAL,海外服务
+
+[Proxy Group]
+海外服务 = select,VPS-OVERSEAS
+香港服务 = select,VPS-HK
+美国服务 = select,VPS-US
+日本服务 = select,VPS-JP
+
+[Remote Rule]
+https://github.com/Moli-X/Resources/raw/main/Loon/Mainland.list, policy=DIRECT, tag=Mainland, enabled=true
+https://raw.githubusercontent.com/VirgilClyne/GetSomeFries/main/ruleset/ASN.China.list, policy=DIRECT, tag=ASN-China, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/China/China.list, policy=DIRECT, tag=China, enabled=true
+
+[General]
+ip-mode = v4-only
+doh-server = https://dns.alidns.com/dns-query
+fast-switch = true
+sni-sniffing = true
+skip-proxy = localhost,*.local,passenger.t3go.cn,e.crashlytics.com,captive.apple.com,app.yinxiang.com,injections.adguard.org,local.adguard.org,cable.auth.com,www.baidu.com,yunbusiness.ccb.com,10.0.0.0/8,100.64.0.0/10,127.0.0.1/32,169.254.0.0/16,172.16.0.0/12,192.168.0.0/16,224.0.0.0/4,240.0.0.0/4,teams.microsoft.com,deltaww.com.cn,book.yunzhan365.com
+bypass-tun = 10.0.0.0/8,100.64.0.0/10,127.0.0.0/8,169.254.0.0/16,172.16.0.0/12,192.0.0.0/24,192.0.2.0/24,192.88.99.0/24,192.168.0.0/16,198.18.0.0/15,198.51.100.0/24,203.0.113.0/24,224.0.0.0/4,255.255.255.255/32
+allow-udp-proxy = true
+allow-wifi-access = false
+real-ip = msftconnecttest.com,msftncsi.com,*.msftconnecttest.com,*.msftncsi.com,*.srv.nintendo.net,*.stun.playstation.net,xbox.*.microsoft.com,*.xboxlive.com,*.battlenet.com.cn,*.battlenet.com,*.blzstatic.cn,*.battle.net
+proxy-test-url = http://developers.google.cn/generate_204
+internet-test-url = http://wifi.vivo.com.cn/generate_204
+test-timeout = 3
+interface-mode = auto
+geoip-url = https://github.com/Hackl0us/GeoIP2-CN/raw/release/Country.mmdb
+disconnect-on-policy-change = false
+disable-stun = true
+disable-udp-ports = 443

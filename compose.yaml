@@ -1,0 +1,78 @@
+name: loon-vps-cleaner
+
+services:
+  sub-store:
+    image: ${SUBSTORE_IMAGE:-xream/sub-store:latest}
+    restart: unless-stopped
+    environment:
+      SUB_STORE_BACKEND_PREFIX: "1"
+      SUB_STORE_FRONTEND_BACKEND_PATH: ${SUBSTORE_SECRET_PATH}
+      SUB_STORE_CORS_ALLOWED_ORIGINS: ${PUBLIC_BASE_URL}
+      SUB_STORE_BACKEND_API_PORT: "3000"
+      SUB_STORE_BODY_JSON_LIMIT: "20mb"
+    volumes:
+      - ./data/sub-store:/opt/app/data
+    networks:
+      - core
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  registry:
+    build: ./registry
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SUBSTORE_API: http://sub-store:3000${SUBSTORE_SECRET_PATH}
+      DB_PATH: /data/registry.sqlite3
+    volumes:
+      - ./data/registry:/data
+    networks:
+      - core
+      - web
+    depends_on:
+      - sub-store
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_HASH: ${ADMIN_HASH}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - web
+    depends_on:
+      - registry
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  web:
+  core:
+    internal: false
+
+volumes:
+  caddy_data:
+  caddy_config:

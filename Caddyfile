@@ -1,0 +1,24 @@
+{$DOMAIN} {
+  encode zstd gzip
+
+  @feed path /loon/*
+  handle @feed {
+    header Cache-Control "private, no-store"
+    reverse_proxy registry:8000
+  }
+
+  @admin path /manager /manager/* /api/* /static/*
+  handle @admin {
+    basic_auth {
+      {$ADMIN_USER} {$ADMIN_HASH}
+    }
+    header X-Content-Type-Options "nosniff"
+    header Referrer-Policy "no-referrer"
+    header X-Frame-Options "DENY"
+    reverse_proxy registry:8000
+  }
+
+  handle {
+    respond "Not found" 404
+  }
+}

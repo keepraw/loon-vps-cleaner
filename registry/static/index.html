@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Loon VPS Cleaner</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header><h1>Loon VPS Cleaner</h1><p id="tagline">Multi-source subscription cleaner / persistent decisions / four Loon feeds</p></header>
+  <main>
+    <section class="panel">
+      <div class="heading"><h2 id="stats-heading">Overview</h2><button id="sync-all" class="primary">Refresh all airports</button></div>
+      <div id="stats" class="metrics">Loading...</div>
+      <p id="notice" class="hint">Daily refresh 05:00 Asia/Shanghai. Nothing will be tested or automatically sorted.</p>
+    </section>
+
+    <section class="panel">
+      <h2 id="feeds-heading">Loon feeds</h2>
+      <div id="feeds" class="feed-list">Loading...</div>
+      <p id="feeds-note" class="hint">Overseas includes all accepted nodes, including HK / US / JP. Each feed is protected by its private URL token.</p>
+    </section>
+
+    <section class="panel">
+      <h2 id="sources-heading">Airports</h2>
+      <form id="source-add" class="form-row">
+        <label id="source-name-label">Source name <input id="source-name" required maxlength="80" placeholder="Airport A" /></label>
+        <label id="source-url-label">Subscription HTTPS URL <input id="source-url" type="url" required placeholder="https://..." /></label>
+        <label id="source-ua-label">User-Agent (optional) <input id="source-ua" placeholder="clash.meta/v1.19.23" /></label>
+        <button id="source-add-button" type="submit">Add & refresh</button>
+      </form>
+      <div id="sources">Loading...</div>
+    </section>
+
+    <section class="panel">
+      <div class="heading"><h2 id="nodes-heading">Nodes</h2><button id="nodes-reload">Reload list</button></div>
+      <div class="form-row filterrow">
+        <label id="filter-search-label">Search <input id="node-q" placeholder="Name or server" /></label>
+        <label id="filter-source-label">Airport <select id="node-source"><option value="">All</option></select></label>
+        <label id="filter-status-label">Decision <select id="node-status"><option value="">All</option><option value="auto">Auto</option><option value="keep">Keep</option><option value="exclude">Excluded</option><option value="review">Review</option></select></label>
+        <button id="filter-apply">Filter</button>
+      </div>
+      <div class="toolbar"><span id="nodes-info"></span><button id="batch-exclude">Exclude selected</button><button id="batch-keep">Restore selected</button></div>
+      <div id="nodes">Loading...</div>
+      <div class="pager"><button id="page-prev">Previous</button><span id="page-info"></span><button id="page-next">Next</button></div>
+    </section>
+
+    <section class="panel">
+      <h2 id="rules-heading">Persistent exclusion patterns</h2>
+      <p id="rules-note" class="hint">Example: block every name containing Traffic or 0.1x from one airport. Explicit Keep decisions override these patterns.</p>
+      <form id="rule-add" class="form-row">
+        <label id="rule-pattern-label">Regex <input id="rule-pattern" required placeholder="(?i)(expire|traffic)" /></label>
+        <label id="rule-source-label">Scope <select id="rule-source"><option value="">All airports</option></select></label>
+        <button id="rule-add-button" type="submit">Add rule</button>
+      </form>
+      <div id="rules"></div>
+    </section>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </main>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
