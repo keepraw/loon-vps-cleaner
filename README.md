@@ -74,6 +74,18 @@ Open `https://YOUR_DOMAIN/manager/`, add one or more HTTPS provider subscription
 
 Copy the single private feed URL from the manager into Loon once. The admin UI uses HTTP Basic Auth with a 10-character minimum and no mandatory character classes; use a memorable but hard-to-guess passphrase. The unified feed uses a long random token. Sub-Store's API is private to the Docker network.
 
+## Upgrade an existing deployment
+
+The bootstrap downloads a source archive, not a Git checkout. The old `update.sh` does not fetch GitHub changes. Download and audit the new updater, then pin the reviewed commit SHA:
+
+```bash
+curl -fsSLo /tmp/loon-cleaner-upgrade.sh https://raw.githubusercontent.com/keepraw/loon-vps-cleaner/main/upgrade.sh
+less /tmp/loon-cleaner-upgrade.sh
+sudo bash /tmp/loon-cleaner-upgrade.sh --ref <40-character-commit-SHA>
+```
+
+The updater backs up settings/data first, then changes only Registry application code and rebuilds only its container. It preserves `.env`, SQLite, Caddy, Sub-Store and unrelated Compose projects, and attempts code rollback on failure.
+
 ## Maintenance
 
 From the installation directory:

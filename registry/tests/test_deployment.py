@@ -102,3 +102,21 @@ def test_admin_password_minimum_is_ten_characters_without_complexity_rules():
     assert '[ "${#admin_password}" -ge 10 ]' in setup
     assert "at least 16 characters" not in setup
     assert "must include uppercase" not in setup.lower()
+
+
+def test_dashboard_loads_sections_in_parallel_and_limits_page_size():
+    js = (ROOT / "registry/static/app.js").read_text(encoding="utf-8")
+    assert "Promise.allSettled([" in js
+    assert 'page_size:"40"' in js
+    app = (ROOT / "registry/app.py").read_text(encoding="utf-8")
+    assert '@app.get("/api/status")\ndef status():' in app
+    assert '@app.get("/api/nodes")\ndef list_nodes(' in app
+
+
+def test_upgrader_updates_registry_only_and_backs_up_first():
+    upgrade = (ROOT / "upgrade.sh").read_text(encoding="utf-8")
+    assert 'bash "$INSTALL_DIR/backup.sh"' in upgrade
+    assert '"$INSTALL_DIR/registry"' in upgrade
+    assert 'docker compose up -d --no-deps --build registry' in upgrade
+    assert 'docker compose down' not in upgrade
+    assert 'docker system prune' not in upgrade

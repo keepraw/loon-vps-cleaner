@@ -124,10 +124,10 @@ async function reloadSources() {
   }
 }
 async function reloadNodes() {
-  const query=new URLSearchParams({page:String(currentPage),page_size:"80",q:$("node-q").value,
+  const query=new URLSearchParams({page:String(currentPage),page_size:"40",q:$("node-q").value,
     source_id:$("node-source").value,status_filter:$("node-status").value});
   const res=await request("/api/nodes?"+query.toString());
-  pageCount=Math.ceil(res.total/80);
+  pageCount=Math.ceil(res.total/40);
   $("nodes").replaceChildren();
   $("nodes-info").textContent=`${res.total} ${T.count}`;
   $("page-info").textContent=`${currentPage} / ${Math.max(1,pageCount)}`;
@@ -178,7 +178,14 @@ async function reloadRules(){
   }
   if(!rules.length)$("rules").append(txt("p",T.empty,"empty"));
 }
-async function reloadAll(){await reloadStatus();await reloadFeeds();await reloadSources();await reloadNodes();await reloadRules();}
+async function reloadAll(){
+  // Independent sections should render as soon as their own API finishes.
+  const results=await Promise.allSettled([
+    reloadStatus(),reloadFeeds(),reloadSources(),reloadNodes(),reloadRules()
+  ]);
+  const failed=results.find(r=>r.status==="rejected");
+  if(failed)throw failed.reason;
+}
 
 $("source-add").addEventListener("submit",e=>{e.preventDefault();task(async()=>{
   const payload={name:$("source-name").value.trim(),url:$("source-url").value.trim(),ua:$("source-ua").value.trim()};

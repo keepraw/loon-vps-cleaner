@@ -215,3 +215,21 @@ def test_single_aggregated_loom_feed_and_server_region_tags(client):
     assert c.get("/loon/all/invalid").status_code == 404
     # The old overseas URL remains compatible with already-imported profiles.
     assert c.get("/loon/overseas/" + token).text == output.text
+
+
+def test_summary_returns_correct_counts_after_exclusion(client):
+    c, module, fake = client
+    src = c.post("/api/sources", json={"name":"Status", "url":"https://provider.example.net/sub"}).json()["id"]
+    fake.data["source_" + src] = [
+        node("HK Good", "hk.example.net"), node("US Bad", "us.example.net"), node("JP Good", "jp.example.net")
+    ]
+    assert c.post("/api/sync").status_code == 200
+    nodes = c.get("/api/nodes").json()["nodes"]
+    bad = next(n for n in nodes if n["first_name"] == "US Bad")
+    assert c.put(f"/api/nodes/{src}/{bad['fingerprint']}", json={"status":"exclude"}).status_code == 200
+    response = c.get("/api/status")
+    assert response.status_code == 200
+    assert response.json()["nodes"] == 3
+    assert response.json()["excluded"] == 1
+    assert response.json()["review"] == 0
+    assert c.get("/api/nodes", params={"page_size":2}).json()["page_size"] == 2

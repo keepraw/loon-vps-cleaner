@@ -438,20 +438,28 @@ async def manager():
 
 
 @app.get("/api/status")
-async def status():
+def status():
+    # Run SQLite/regex scan in FastAPI's threadpool, not the event loop.
+    # Only fetch columns needed for the summary and count in one pass.
     with connect() as db:
         src = db.execute("SELECT COUNT(*) FROM sources WHERE enabled=1").fetchone()[0]
         records = [dict(x) for x in db.execute("""
-            SELECT n.* FROM nodes n JOIN sources s ON n.source_id=s.id
+            SELECT n.source_id, n.last_name, n.status,
+                   (g.fingerprint IS NOT NULL) AS global_excluded
+            FROM nodes n
+            JOIN sources s ON n.source_id=s.id
+            LEFT JOIN global_exclusions g ON g.fingerprint=n.fingerprint
             WHERE n.active=1 AND s.enabled=1
         """)]
-        global_excluded = {x[0] for x in db.execute("SELECT fingerprint FROM global_exclusions")}
         rules = [dict(x) for x in db.execute("SELECT * FROM rules WHERE enabled=1")]
         feeds = [dict(r) for r in db.execute("SELECT region,count,warning,published_at FROM feeds ORDER BY region")]
-    exc = sum(1 for n in records if filter_reason(n, n["fingerprint"] in global_excluded, rules)
-              not in (None, "needs_review"))
-    review = sum(1 for n in records if filter_reason(n, n["fingerprint"] in global_excluded, rules)
-                 == "needs_review")
+    exc = review = 0
+    for n in records:
+        reason = filter_reason(n, bool(n["global_excluded"]), rules)
+        if reason == "needs_review":
+            review += 1
+        elif reason:
+            exc += 1
     return {"sources": src, "nodes": len(records), "excluded": exc, "review": review,
             "feeds": feeds, "syncing": SYNC_LOCK.locked(), "daily_at": "05:00 Asia/Shanghai"}
 
@@ -571,7 +579,7 @@ async def publish():
 
 
 @app.get("/api/nodes")
-async def list_nodes(q: str = "", status_filter: str = "", source_id: str = "", page: int = 1,
+def list_nodes(q: str = "", status_filter: str = "", source_id: str = "", page: int = 1,
                      page_size: int = 80, include_missing: bool = False):
     page = min(max(1, page), 100000)
     page_size = min(max(1, page_size), 200)

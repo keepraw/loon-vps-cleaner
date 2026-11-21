@@ -155,6 +155,22 @@ volumes:
 
 节点指纹由标准化后的连接参数计算，不依赖节点名称。只改名不会绕过排除记录；若机场同时更换了地址和凭据且没有稳定 ID，系统会将可疑替换节点放入人工复核，而不是假装能百分之百认出它。
 
+## 升级已有部署
+
+一键安装器下载的是源码压缩包，不是 Git 仓库。旧的 `update.sh` **不会拉取 GitHub 新源码**，因此不能靠它更新管理页面。
+
+下载并审查 `upgrade.sh`，再使用完整提交 SHA 升级：
+
+```bash
+curl -fsSLo /tmp/loon-cleaner-upgrade.sh https://raw.githubusercontent.com/keepraw/loon-vps-cleaner/main/upgrade.sh
+less /tmp/loon-cleaner-upgrade.sh
+sudo bash /tmp/loon-cleaner-upgrade.sh --ref <40位提交SHA>
+```
+
+升级器先执行原有 `backup.sh` 备份，再只覆盖 `registry/` 应用源码，并使用 `docker compose up -d --no-deps --build registry` 重建 Registry。**不会重新安装 Docker、覆盖 .env、重建 Caddy、删除 SQLite、改变机场数据或触碰 BiliTool。** 如果 Registry 启动失败，尝试恢复旧版应用代码。
+
+管理界面性能优化包括独立区块并行加载、总览统计改为线程池且只计算一遍、节点分页从每页 80 条调整为 40 条。
+
 ## 常用维护命令
 
 以下命令均在安装目录执行，例如：
