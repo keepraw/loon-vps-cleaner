@@ -1,13 +1,14 @@
 # Loon minimal configuration draft
-# Replace the four example HTTPS URLs with values copied from the VPS Manager.
-# Overseas deliberately contains ALL accepted nodes (including HK/US/JP).
-# This is an example based on the earlier minimal draft; test before replacing your live profile.
+# Replace the ONE HTTPS URL with the unified feed URL copied from the VPS Manager.
+# VPS prefixes node names with "HK - ", "US - ", "JP - ", or "OTHER - ".
 
 [Remote Proxy]
-VPS-HK = https://example.com/loon/hk/HK_TOKEN,enabled=true,parser-enabled=false
-VPS-US = https://example.com/loon/us/US_TOKEN,enabled=true,parser-enabled=false
-VPS-JP = https://example.com/loon/jp/JP_TOKEN,enabled=true,parser-enabled=false
-VPS-OVERSEAS = https://example.com/loon/overseas/OVERSEAS_TOKEN,enabled=true,parser-enabled=false
+VPS = https://example.com/loon/all/ALL_TOKEN,enabled=true,parser-enabled=false
+
+[Remote Filter]
+VPS-HK = NameRegex,VPS,FilterKey = "^HK - "
+VPS-US = NameRegex,VPS,FilterKey = "^US - "
+VPS-JP = NameRegex,VPS,FilterKey = "^JP - "
 
 [Rule]
 DOMAIN,www.topcashback.com,海外服务
@@ -54,10 +55,10 @@ GEOIP,CN,DIRECT
 FINAL,海外服务
 
 [Proxy Group]
-海外服务 = select,VPS-OVERSEAS
 香港服务 = select,VPS-HK
 美国服务 = select,VPS-US
 日本服务 = select,VPS-JP
+海外服务 = select,VPS
 
 [Remote Rule]
 https://github.com/Moli-X/Resources/raw/main/Loon/Mainland.list, policy=DIRECT, tag=Mainland, enabled=true

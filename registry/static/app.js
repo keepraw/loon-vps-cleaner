@@ -12,6 +12,7 @@ const T = {
   current: "\u5f53\u524d", source: "\u673a\u573a", state: "\u72b6\u6001", count: "\u8282\u70b9", manual: "\u624b\u52a8",
   region: "\u5730\u533a", empty: "\u6682\u65e0\u6570\u636e", refreshOne: "\u5355\u72ec\u5237\u65b0", warning: "\u8b66\u544a",
   hk:"\u9999\u6e2f", us:"\u7f8e\u56fd", jp:"\u65e5\u672c", overseas:"\u6d77\u5916\u5168\u90e8",
+  allFeed:"\u7edf\u4e00\u8ba2\u9605\uff08\u5168\u90e8\u8282\u70b9\uff09",
   updated:"\u66f4\u65b0\u65f6\u95f4", status_auto:"\u81ea\u52a8", status_keep:"\u624b\u52a8\u4fdd\u7559",
   status_exclude:"\u624b\u52a8\u6392\u9664", status_review:"\u5f85\u786e\u8ba4",
   errorHint:"\u8bf7\u67e5\u770b\u670d\u52a1\u7aef\u65e5\u5fd7\u6216\u7a0d\u540e\u91cd\u8bd5"
@@ -64,9 +65,9 @@ function localize() {
     "batch-exclude":T.batchExclude,"batch-keep":T.batchKeep,"page-prev":T.prev,
     "page-next":T.next,"rule-add-button":T.addRule};
   for(const [id,label] of Object.entries(m)) $(id).textContent=label;
-  $("tagline").textContent="\u591a\u673a\u573a\u8ba2\u9605 / \u6c38\u4e45\u6392\u9664 / \u56db\u51fa\u53e3";
+  $("tagline").textContent="\u591a\u673a\u573a\u8ba2\u9605 / \u6c38\u4e45\u6392\u9664 / \u4e00\u4e2a\u8ba2\u9605\u3001\u56db\u4e2a\u624b\u52a8\u7b56\u7565\u7ec4";
   $("notice").textContent="\u6bcf\u5929\u5317\u4eac\u65f6\u95f4 05:00 \u5237\u65b0\uff1b\u4e0d\u81ea\u52a8\u6d4b\u901f\u3001\u4e0d\u5ef6\u8fdf\u6392\u5e8f\u3002";
-  $("feeds-note").textContent="\u6d77\u5916\u5305\u542b\u5168\u90e8\u5df2\u63a5\u53d7\u8282\u70b9\uff08\u5305\u542b\u9999\u6e2f\u3001\u7f8e\u56fd\u3001\u65e5\u672c\uff09\u3002\u56db\u4e2a\u5730\u5740\u5747\u6709\u79c1\u6709\u4ee4\u724c\u3002";
+  $("feeds-note").textContent="\u53ea\u9700\u5c06\u8fd9\u4e00\u4e2a\u8ba2\u9605\u5730\u5740\u6dfb\u52a0\u5230 Loon \u4e00\u6b21\u3002VPS \u4f1a\u7ed9\u8282\u70b9\u540d\u52a0\u4e0a HK - / US - / JP - \u524d\u7f00\uff0cLoon \u7528\u4e09\u4e2a\u8f7b\u91cf\u7b5b\u9009\u5668\u5efa\u7acb\u5730\u533a\u7b56\u7565\u7ec4\uff1b\u6d77\u5916\u7b56\u7565\u7ec4\u5305\u542b\u5168\u90e8\u8282\u70b9\u3002";
   $("rules-note").textContent="\u8f93\u5165\u6b63\u5219\u8868\u8fbe\u5f0f\u540e\uff0c\u6bcf\u6b21\u5237\u65b0\u90fd\u4f1a\u81ea\u52a8\u8fc7\u6ee4\u5339\u914d\u8282\u70b9\u3002\u4eba\u5de5\u4fdd\u7559\u7684\u8282\u70b9\u4f18\u5148\u7ea7\u66f4\u9ad8\u3002";
   const labels={"source-name-label":"\u673a\u573a\u540d\u79f0 ","source-url-label":"\u8ba2\u9605 HTTPS \u94fe\u63a5 ",
     "source-ua-label":"User-Agent\uff08\u53ef\u9009\uff09 ","filter-search-label":"\u641c\u7d22 ",
@@ -89,13 +90,12 @@ async function reloadStatus() {
 async function reloadFeeds() {
   const feeds = await request("/api/feeds");
   $("feeds").replaceChildren();
-  for(const region of ["hk","us","jp","overseas"]) {
-    const info=feeds[region], wrap=txt("div","","feed"), data=document.createElement("div");
-    data.append(txt("div",`${T[region]} : ${info.count} ${T.count}`,"name"),txt("div",`${T.updated}: ${when(info.published_at)}`,"subtext"));
-    if(info.warning) data.append(txt("div",`${T.warning}: ${info.warning}`,"subtext"));
-    const copy=mkButton(T.copy,async()=>{try{await navigator.clipboard.writeText(info.url);toast(T.saved);}catch(e){toast(e.message,true);}});
-    wrap.append(data,copy); $("feeds").append(wrap);
-  }
+  const info=feeds.all, wrap=txt("div","","feed"), data=document.createElement("div");
+  data.append(txt("div",`${T.allFeed} : ${info.count} ${T.count}`,"name"),
+    txt("div",`${T.updated}: ${when(info.published_at)}`,"subtext"));
+  if(info.warning) data.append(txt("div",`${T.warning}: ${info.warning}`,"subtext"));
+  const copy=mkButton(T.copy,async()=>{try{await navigator.clipboard.writeText(info.url);toast(T.saved);}catch(e){toast(e.message,true);}});
+  wrap.append(data,copy); $("feeds").append(wrap);
 }
 async function reloadSources() {
   allSources = await request("/api/sources");

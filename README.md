@@ -4,18 +4,20 @@
 
 Self-hosted multi-provider subscription cleaner for Loon. Sub-Store handles provider fetching, parsing and native Loon serialization. FastAPI + SQLite keeps durable node identities, manual exclusions, region overrides and published feeds. The VPS does **not** forward everyday proxy traffic.
 
-Features: multiple providers, daily refresh at 05:00 Asia/Shanghai, persistent exclusions across node renames, regex filters, batch keep/exclude/restore, manual display-name and region overrides, and four token-protected Loon feeds. No latency tests, sorting by speed or automatic node selection.
+Features: multiple providers, daily refresh at 05:00 Asia/Shanghai, persistent exclusions across node renames, regex filters, batch keep/exclude/restore, manual display-name and region overrides, and one token-protected Loon feed with four manual groups. No latency tests, sorting by speed or automatic node selection.
 
-## Four feeds
+## One subscription, four manual groups
 
-| Feed | Meaning |
+The manager exposes **one unified Loon subscription URL**. Add it once under `[Remote Proxy]`; you do not need to copy four URLs.
+
+| Loon group | Nodes |
 | --- | --- |
-| `hk` | Accepted Hong Kong nodes |
-| `us` | Accepted United States nodes |
-| `jp` | Accepted Japan nodes |
-| `overseas` | **All accepted nodes**, including HK/US/JP and every other region |
+| Hong Kong | VPS-prefixed `HK - ` nodes |
+| United States | VPS-prefixed `US - ` nodes |
+| Japan | VPS-prefixed `JP - ` nodes |
+| Overseas | All accepted nodes, including every region |
 
-Overseas is an aggregate, not a mutually exclusive fourth region. A node appearing in a regional feed and Overseas is intentional.
+Loon needs three tiny local `[Remote Filter]` (NameRegex) entries to split one subscription into regional groups. Region recognition remains server-side: the VPS adds stable prefixes before publishing. Loon only matches those prefixes; it does not need to understand the airport's original naming scheme. No speed tests, latency sorting or automatic switching are used.
 
 ## Supported deployment environments
 
@@ -70,7 +72,7 @@ Setup detects the OS, Docker CLI, Compose V2 and daemon. It reuses an existing D
 
 Open `https://YOUR_DOMAIN/manager/`, add one or more HTTPS provider subscription URLs, refresh, and use the Nodes page to exclude unwanted nodes, add regex filters, restore nodes, rename them or override regions. The service refreshes providers daily at 05:00 Asia/Shanghai. A failed provider refresh keeps its last successful snapshot.
 
-Copy the four private feed URLs from the manager into Loon. The admin UI uses HTTP Basic Auth with a 10-character minimum and no mandatory character classes; use a memorable but hard-to-guess passphrase. Each feed has a separate long random token. Sub-Store's API is private to the Docker network.
+Copy the single private feed URL from the manager into Loon once. The admin UI uses HTTP Basic Auth with a 10-character minimum and no mandatory character classes; use a memorable but hard-to-guess passphrase. The unified feed uses a long random token. Sub-Store's API is private to the Docker network.
 
 ## Maintenance
 

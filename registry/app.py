@@ -253,9 +253,12 @@ def render_plan(db: sqlite3.Connection):
             seen.add(fp)
             final_proxy = {k: v for k, v in proxy.items() if not k.startswith("_")}
             display = safe_label(record["manual_alias"] or record["first_name"])
-            final_proxy["name"] = safe_label(source["name"])[:30] + " | " + display
-            buckets["overseas"].append(final_proxy)
             bucket = region_for(record["last_name"], record["region_override"])
+            # Loon receives one aggregate subscription. Stable server-side
+            # prefixes let its lightweight local filters build regional groups.
+            region_tag = {"hk": "HK - ", "us": "US - ", "jp": "JP - "}.get(bucket, "OTHER - ")
+            final_proxy["name"] = region_tag + safe_label(source["name"])[:30] + " | " + display
+            buckets["overseas"].append(final_proxy)
             if bucket:
                 buckets[bucket].append(final_proxy)
     # Loon names must be unique even when source/name is duplicated.
@@ -458,18 +461,23 @@ async def feeds():
     with connect() as db:
         feed_meta = {r["region"]: dict(r) for r in db.execute(
             "SELECT region,count,warning,published_at FROM feeds")}
-    return {region: {"url": f"{PUBLIC_BASE_URL}/loon/{region}/{FEED_TOKENS[region]}",
-                     **feed_meta.get(region, {"count": 0, "warning": "Not published yet", "published_at": None})}
-            for region in REGIONS}
+    return {"all": {
+        "url": f"{PUBLIC_BASE_URL}/loon/all/{FEED_TOKENS['overseas']}",
+        **feed_meta.get("overseas", {"count": 0, "warning": "Not published yet", "published_at": None})
+    }}
 
 
 @app.get("/loon/{region}/{token}")
 async def loon_feed(region: str, token: str):
     # Do not reveal whether a group exists to unauthenticated callers.
-    if region not in REGIONS or not secrets.compare_digest(token, FEED_TOKENS[region]):
+    # /loon/all is the only URL users need. Keep legacy regional URLs working
+    # for old Loon profiles, but do not advertise them in the manager UI.
+    storage_region = "overseas" if region == "all" else region
+    token_region = "overseas" if region == "all" else region
+    if token_region not in REGIONS or not secrets.compare_digest(token, FEED_TOKENS[token_region]):
         raise HTTPException(404, "Not found")
     with connect() as db:
-        row = db.execute("SELECT content FROM feeds WHERE region=?", (region,)).fetchone()
+        row = db.execute("SELECT content FROM feeds WHERE region=?", (storage_region,)).fetchone()
     if not row:
         raise HTTPException(503, "No published subscription yet")
     content = CIPHER.decrypt(row["content"]).decode()
