@@ -204,9 +204,9 @@ project_name="${project_name:-loon-vps-cleaner}"
 read -r -p 'Admin username [admin]: ' admin_name
 admin_name="${admin_name:-admin}"
 [[ "$admin_name" =~ ^[a-zA-Z0-9_-]{3,40}$ ]] || die 'Admin username must use 3-40 letters, digits, underscores or hyphens.'
-read -r -s -p 'Admin password (at least 16 characters): ' admin_password
+read -r -s -p 'Admin password (at least 10 characters): ' admin_password
 printf '\n'
-[ "${#admin_password}" -ge 16 ] || die 'Password too short; use at least 16 characters.'
+[ "${#admin_password}" -ge 10 ] || die 'Password too short; use at least 10 characters.'
 read -r -s -p 'Confirm admin password: ' admin_confirm
 printf '\n'
 [ "$admin_password" = "$admin_confirm" ] || die 'Passwords differ.'

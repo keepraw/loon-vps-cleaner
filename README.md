@@ -70,7 +70,7 @@ Setup detects the OS, Docker CLI, Compose V2 and daemon. It reuses an existing D
 
 Open `https://YOUR_DOMAIN/manager/`, add one or more HTTPS provider subscription URLs, refresh, and use the Nodes page to exclude unwanted nodes, add regex filters, restore nodes, rename them or override regions. The service refreshes providers daily at 05:00 Asia/Shanghai. A failed provider refresh keeps its last successful snapshot.
 
-Copy the four private feed URLs from the manager into Loon. The admin UI uses HTTP Basic Auth; each feed has a separate long random token. Sub-Store's API is private to the Docker network.
+Copy the four private feed URLs from the manager into Loon. The admin UI uses HTTP Basic Auth with a 10-character minimum and no mandatory character classes; use a memorable but hard-to-guess passphrase. Each feed has a separate long random token. Sub-Store's API is private to the Docker network.
 
 ## Maintenance
 

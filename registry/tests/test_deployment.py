@@ -94,3 +94,11 @@ def test_standalone_caddy_is_a_shared_multi_site_ingress():
     backup = (ROOT / "backup.sh").read_text(encoding="utf-8")
     assert "caddy-sites" in backup
     assert "caddy-sites/*.caddy" in (ROOT / ".gitignore").read_text(encoding="utf-8")
+
+
+def test_admin_password_minimum_is_ten_characters_without_complexity_rules():
+    setup = (ROOT / "setup.sh").read_text(encoding="utf-8")
+    assert "Admin password (at least 10 characters)" in setup
+    assert '[ "${#admin_password}" -ge 10 ]' in setup
+    assert "at least 16 characters" not in setup
+    assert "must include uppercase" not in setup.lower()
