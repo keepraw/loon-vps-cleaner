@@ -11,3 +11,8 @@ __pycache__/
 .vscode/
 *.zip
 *.tar.gz
+
+# Per-server deployment configuration and generated reverse-proxy credentials
+compose.override.yaml
+proxy-snippets/loon-cleaner.*
+proxy-snippets/nginx.htpasswd

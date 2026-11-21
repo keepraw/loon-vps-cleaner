@@ -1,0 +1,12 @@
+services:
+  registry:
+    networks:
+      core: {}
+      proxy:
+        aliases:
+          - loon-vps-cleaner-registry
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_DOCKER_NETWORK}

@@ -10,6 +10,6 @@ echo 'Stopping Registry + Sub-Store briefly for consistent on-disk backup...'
 docker compose stop registry sub-store
 restore() { docker compose start sub-store registry >/dev/null 2>&1 || true; }
 trap restore EXIT
-tar --warning=no-file-changed -czf "$archive" .env data/registry data/sub-store
+tar --warning=no-file-changed -czf "$archive" .env compose.override.yaml data/registry data/sub-store proxy-snippets
 chmod 600 "$archive"
 echo "Backup saved to: $archive (contains subscription credentials and keys)"

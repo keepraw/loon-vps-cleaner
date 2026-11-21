@@ -58,12 +58,11 @@ if [ ! -r /etc/os-release ]; then
   echo 'Cannot determine Linux distribution' >&2
   exit 1
 fi
+# Existing Docker installations can be used on any Linux distribution. If
+# Docker is absent, setup.sh offers automatic installation on Debian/Ubuntu.
 # shellcheck disable=SC1091
 . /etc/os-release
-if [ "${ID:-}" != 'debian' ] || [ "${VERSION_ID:-}" != '12' ]; then
-  echo 'This bootstrap installer is intended for Debian 12 only.' >&2
-  exit 1
-fi
+printf 'Detected operating system: %s %s (%s)\n' "${PRETTY_NAME:-unknown}" "${VERSION_ID:-unknown}" "${ID:-unknown}"
 
 stage="$(mktemp -d)"
 trap 'rm -rf -- "$stage"' EXIT
@@ -93,6 +92,7 @@ mv -- "$stage/source" "$INSTALL_DIR"
 chmod 755 "$INSTALL_DIR"
 printf '\nDownloaded source to: %s\n' "$INSTALL_DIR"
 printf 'Source repository: https://github.com/%s\n' "$REPO"
-printf 'Continuing with interactive Debian 12 setup...\n\n'
-# Intentionally runs the downloaded, auditable local setup script.
-exec bash "$INSTALL_DIR/setup.sh"
+printf 'Continuing with interactive setup...\n\n'
+# Intentionally runs the downloaded, auditable local setup script. The EXIT
+# trap removes the temporary archive even when setup returns a failure code.
+bash "$INSTALL_DIR/setup.sh"

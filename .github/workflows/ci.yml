@@ -22,10 +22,11 @@ jobs:
         with:
           node-version: '22'
       - name: Install Python test dependencies
-        run: python -m pip install -r registry/requirements.txt pytest
+        run: python -m pip install -r registry/requirements.txt pytest pyyaml
       - name: Check syntax
         run: |
           bash -n install.sh setup.sh update.sh backup.sh
+          python -m compileall -q registry/tests
           node --check registry/static/app.js
           python -m compileall -q registry/app.py registry/core.py
       - name: Test Node Registry (mocked Sub-Store)

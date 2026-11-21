@@ -1,0 +1,4 @@
+services:
+  registry:
+    ports:
+      - "127.0.0.1:${REGISTRY_HOST_PORT:-18765}:8000"

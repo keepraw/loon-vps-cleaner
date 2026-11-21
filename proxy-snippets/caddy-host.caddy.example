@@ -1,0 +1,26 @@
+# Copy this site block into your existing Caddy configuration.
+# Replace the placeholders with the values printed by setup.sh.
+__DOMAIN__ {
+  encode zstd gzip
+
+  @feed path /loon/*
+  handle @feed {
+    header Cache-Control "private, no-store"
+    reverse_proxy 127.0.0.1:__PORT__
+  }
+
+  @admin path /manager /manager/* /api/* /static/*
+  handle @admin {
+    basic_auth {
+      __ADMIN_USER__ __ADMIN_HASH__
+    }
+    header X-Content-Type-Options "nosniff"
+    header Referrer-Policy "no-referrer"
+    header X-Frame-Options "DENY"
+    reverse_proxy 127.0.0.1:__PORT__
+  }
+
+  handle {
+    respond "Not found" 404
+  }
+}

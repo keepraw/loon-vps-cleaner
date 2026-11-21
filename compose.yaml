@@ -1,4 +1,4 @@
-name: loon-vps-cleaner
+name: ${COMPOSE_PROJECT_NAME:-loon-vps-cleaner}
 
 services:
   sub-store:
@@ -13,7 +13,7 @@ services:
     volumes:
       - ./data/sub-store:/opt/app/data
     networks:
-      - core
+      core: {}
     security_opt:
       - no-new-privileges:true
     logging:
@@ -32,8 +32,7 @@ services:
     volumes:
       - ./data/registry:/data
     networks:
-      - core
-      - web
+      core: {}
     depends_on:
       - sub-store
     security_opt:
@@ -43,36 +42,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    environment:
-      DOMAIN: ${DOMAIN}
-      ADMIN_USER: ${ADMIN_USER}
-      ADMIN_HASH: ${ADMIN_HASH}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - web
-    depends_on:
-      - registry
-    security_opt:
-      - no-new-privileges:true
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "3"
-
 networks:
-  web:
   core:
     internal: false
-
-volumes:
-  caddy_data:
-  caddy_config:
