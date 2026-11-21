@@ -120,3 +120,13 @@ def test_upgrader_updates_registry_only_and_backs_up_first():
     assert 'docker compose up -d --no-deps --build registry' in upgrade
     assert 'docker compose down' not in upgrade
     assert 'docker system prune' not in upgrade
+
+
+def test_node_list_uses_batched_dom_and_skips_offscreen_paint():
+    js = (ROOT / "registry/static/app.js").read_text(encoding="utf-8")
+    css = (ROOT / "registry/static/style.css").read_text(encoding="utf-8")
+    assert "document.createDocumentFragment()" in js
+    assert "$(\"nodes\").append(fragment)" in js
+    assert "let nodesLoading = false" in js
+    assert '$(\"page-next\").disabled = true' in js
+    assert ".node-item{content-visibility:auto" in css

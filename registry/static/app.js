@@ -21,6 +21,7 @@ let currentPage = 1;
 let pageCount = 0;
 let allSources = [];
 let busy = false;
+let nodesLoading = false;
 const selected = new Map();
 
 function txt(tag, text, cls = "") {
@@ -124,11 +125,17 @@ async function reloadSources() {
   }
 }
 async function reloadNodes() {
+  if(nodesLoading) return;
+  nodesLoading = true;
+  $("page-prev").disabled = true;
+  $("page-next").disabled = true;
+  try {
   const query=new URLSearchParams({page:String(currentPage),page_size:"40",q:$("node-q").value,
     source_id:$("node-source").value,status_filter:$("node-status").value});
   const res=await request("/api/nodes?"+query.toString());
   pageCount=Math.ceil(res.total/40);
   $("nodes").replaceChildren();
+  const fragment = document.createDocumentFragment();
   $("nodes-info").textContent=`${res.total} ${T.count}`;
   $("page-info").textContent=`${currentPage} / ${Math.max(1,pageCount)}`;
   if(!res.nodes.length) $("nodes").append(txt("p",T.empty,"empty"));
@@ -158,7 +165,15 @@ async function reloadNodes() {
     actions.append(sel);
     if(n.global_excluded) actions.append(mkButton("Global Restore",()=>changeNode(n,{global_exclude:false})));
     else actions.append(mkButton("Global Exclude",()=>changeNode(n,{global_exclude:true})));
-    item.append(data,actions);$("nodes").append(item);
+    item.classList.add("node-item");
+    item.append(data,actions);
+    fragment.append(item);
+  }
+  $("nodes").append(fragment);
+  } finally {
+    nodesLoading = false;
+    $("page-prev").disabled = currentPage <= 1;
+    $("page-next").disabled = currentPage >= pageCount;
   }
 }
 async function changeNode(n,patch){
